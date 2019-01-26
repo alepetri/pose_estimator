@@ -74,7 +74,8 @@ class Tricycle(object):
         for i in range(4):
             self.rect[i].draw()
 
-    def rotate_all(self, angle):
+    def rotate_all(self, diminished_speed):
+        angle = np.arctan(np.divide(diminished_speed,self.r))
         for i in range(4):
             self.rect[i].rotate(angle, self.point_of_rotation)
 
@@ -86,18 +87,18 @@ class Tricycle(object):
         front_wheel_vector = self.rect[2].forward_vector()
         vehicle_vector = self.rect[3].forward_vector()
         angle = np.arccos(np.divide(np.dot(front_wheel_vector[0:2],vehicle_vector[0:2]),4))
-        self.rotate_all(angle)#change the angle to sin of something
+        print(angle)
+        self.rotate_all(self.speed*np.sin(angle))#change the angle to sin of something
         self.translate_all(vehicle_vector, self.speed*np.cos(angle))
 
     def turn_front_wheel(self, angle):
         self.front_wheel_angle += angle
-        print(self.front_wheel_angle)
         if -np.pi/2 <= self.front_wheel_angle <= np.pi/2:
             self.rect[2].rotate(angle, self.centers[2])
 
 if __name__ == "__main__":
 
-    FPS = 1
+    FPS = 10
 
     # define colors
     BLACK = (0 , 0 , 0)
@@ -109,7 +110,7 @@ if __name__ == "__main__":
     # for setting FPS
     clock = pygame.time.Clock()
 
-    tri = Tricycle(screen, 30, 40, tuple([200,200]), tuple([0,1,0]), 2)
+    tri = Tricycle(screen, 30, 40, tuple([200,200]), tuple([0,1,0]), .2)
 
     # define a surface (RECTANGLE)
     # keep rotating the rectangle until running is set to False
@@ -124,7 +125,7 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 running = False
 
-        tri.turn_front_wheel(np.pi/180)
+        #tri.turn_front_wheel(np.pi/180)
         tri.drive()
         tri.draw()
 
