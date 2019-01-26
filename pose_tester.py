@@ -11,7 +11,7 @@ Right Arrow  is move rotate steering wheel +yaw
 
 import pygame
 import numpy as np
-import math
+from pose_estimator import PoseEstimator
 
 class Rectangle(object):
 
@@ -29,20 +29,23 @@ class Rectangle(object):
 
     def rotate(self, angle, axis_point):
         for i in range(4):
-            newX = (self.corners[i][0]-axis_point[0])*np.cos(angle)-(self.corners[i][1]-axis_point[1])*np.sin(angle)+axis_point[0]
-            newY = (self.corners[i][1]-axis_point[1])*np.cos(angle)+(self.corners[i][0]-axis_point[0])*np.sin(angle)+axis_point[1]
+            newX = (self.corners[i][0]-axis_point[0])*np.cos(-angle)-(self.corners[i][1]-axis_point[1])*np.sin(-angle)+axis_point[0]
+            newY = (self.corners[i][1]-axis_point[1])*np.cos(-angle)+(self.corners[i][0]-axis_point[0])*np.sin(-angle)+axis_point[1]
             self.corners[i] = (newX, newY)
-        print(self.corners)
+        self.calc_center()
 
     def translate(self, vector, speed):
         for i in range(4):
             self.corners[i] = (self.corners[i][0]+vector[0]*speed, self.corners[i][1]+vector[1]*speed)
+        self.calc_center()
 
     def forward_vector(self):
         array = np.subtract(self.corners[1],self.corners[0])
         unit = tuple(array/np.sum(array**2)**0.5 + (0,))
-        print unit
         return unit
+
+    def calc_center(self):
+        self.center = ((self.corners[0][0]+self.corners[2][0])/2,(self.corners[0][1]+self.corners[2][1])/2)
 
 
 class Tricycle(object):
@@ -61,6 +64,7 @@ class Tricycle(object):
         case = Rectangle(surface, 1, tuple([0, 255, 0]), tuple(self.centers[3]), self.d+30, self.r+40)
         self.rect = [left_wheel, right_wheel, front_wheel, case]
         self.front_wheel_angle = 0
+        self.ticks = 0
 
     def calc_centers(self):
         right_vector = tuple(np.cross(list(self.direction),[0,0,1])[0:2])
@@ -76,6 +80,7 @@ class Tricycle(object):
 
     def rotate_all(self, diminished_speed):
         angle = np.arctan(np.divide(diminished_speed,self.r))
+        self.point_of_rotation = tuple([sum(x)/2 for x in zip(self.rect[0].center,self.rect[1].center)])
         for i in range(4):
             self.rect[i].rotate(angle, self.point_of_rotation)
 
@@ -83,53 +88,59 @@ class Tricycle(object):
         for i in range(4):
             self.rect[i].translate(vector, diminished_speed)
 
-    def drive(self):
+    def drive(self, direction):
         front_wheel_vector = self.rect[2].forward_vector()
         vehicle_vector = self.rect[3].forward_vector()
-        angle = np.arccos(np.divide(np.dot(front_wheel_vector[0:2],vehicle_vector[0:2]),4))
-        print(angle)
-        self.rotate_all(self.speed*np.sin(angle))#change the angle to sin of something
-        self.translate_all(vehicle_vector, self.speed*np.cos(angle))
+        self.rotate_all(direction*self.speed*np.sin(self.front_wheel_angle))
+        self.translate_all(vehicle_vector, direction*self.speed*np.cos(self.front_wheel_angle))
+        self.ticks += 8.2*direction
 
     def turn_front_wheel(self, angle):
         self.front_wheel_angle += angle
         if -np.pi/2 <= self.front_wheel_angle <= np.pi/2:
-            self.rect[2].rotate(angle, self.centers[2])
+            self.rect[2].rotate(angle, self.rect[2].center)
+        else:
+            self.front_wheel_angle -= angle
+
 
 if __name__ == "__main__":
 
-    FPS = 10
+    FPS = 30
 
-    # define colors
     BLACK = (0 , 0 , 0)
     GREEN = (0 , 255 , 0)
 
-    # initialize pygame and create screen
     pygame.init()
     screen = pygame.display.set_mode((500 , 500))
-    # for setting FPS
+    pygame.transform.flip(screen, False, True)
+
     clock = pygame.time.Clock()
 
-    tri = Tricycle(screen, 30, 40, tuple([200,200]), tuple([0,1,0]), .2)
+    tri = Tricycle(screen, 30, 40, tuple([0,0]), tuple([0,1,0]), 1)
+    pose_est = PoseEstimator(1)
 
-    # define a surface (RECTANGLE)
-    # keep rotating the rectangle until running is set to False
     running = True
     while running:
-        # set FPS
         clock.tick(FPS)
-        # clear the screen every time before drawing new objects
         screen.fill(BLACK)
-        # check for the exit
+        for i in range(9):
+            pygame.draw.line(screen, (0, 200, 200), (0, 50*(i+1)), (500, 50*(i+1)), 1)
+            pygame.draw.line(screen, (0, 200, 200), (50*(i+1), 0), (50*(i+1), 500), 1)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
-        #tri.turn_front_wheel(np.pi/180)
-        tri.drive()
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_UP]:
+            tri.drive(1)
+        if keys[pygame.K_DOWN]:
+            tri.drive(-1)
+        if keys[pygame.K_LEFT]:
+            tri.turn_front_wheel(np.pi/180)
+        if keys[pygame.K_RIGHT]:
+            tri.turn_front_wheel(-np.pi/180)
         tri.draw()
+        print(pose_est.estimate(pygame.time.get_ticks(), tri.front_wheel_angle, tri.ticks, 0))
 
-        # flipping the display after drawing everything
         pygame.display.flip()
 
     pygame.quit()
