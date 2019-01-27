@@ -58,9 +58,9 @@ class Tricycle(object):
         self.speed = speed
         self.direction = direction
         self.centers = self.calc_centers()
-        left_wheel = Rectangle(surface, 1, tuple([0, 255, 0]), tuple(self.centers[0]), 10, 20)
-        right_wheel = Rectangle(surface, 1, tuple([0, 255, 0]), tuple(self.centers[1]), 10, 20)
-        front_wheel = Rectangle(surface, 1, tuple([255, 255, 0]), tuple(self.centers[2]), 10, 20)
+        left_wheel = Rectangle(surface, 1, tuple([0, 255, 0]), tuple(self.centers[0]), 8, 20)
+        right_wheel = Rectangle(surface, 1, tuple([0, 255, 0]), tuple(self.centers[1]), 8, 20)
+        front_wheel = Rectangle(surface, 1, tuple([255, 255, 0]), tuple(self.centers[2]), 8, 20)
         case = Rectangle(surface, 1, tuple([0, 255, 0]), tuple(self.centers[3]), self.d+30, self.r+40)
         self.rect = [left_wheel, right_wheel, front_wheel, case]
         self.front_wheel_angle = 0
@@ -105,7 +105,7 @@ class Tricycle(object):
 
 if __name__ == "__main__":
 
-    FPS = 30
+    FPS = 100
 
     BLACK = (0 , 0 , 0)
     GREEN = (0 , 255 , 0)
@@ -116,7 +116,7 @@ if __name__ == "__main__":
 
     clock = pygame.time.Clock()
 
-    tri = Tricycle(screen, 30, 40, tuple([0,0]), tuple([0,1,0]), 1)
+    tri = Tricycle(screen, 30, 40, tuple([0,0]), tuple([0,1,0]), 2)
     pose_est = PoseEstimator(1)
 
     running = True

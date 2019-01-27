@@ -15,7 +15,7 @@ class PoseEstimator(object):
 
     def __init__(self, sensor_weight = 0.5):
         self.sensor_weight = sensor_weight
-        self.last_pose = (0, 0, 1.5*np.pi)
+        self.last_pose = [0, 0, 1.5*np.pi]
         self.last_time = 0
         self.last_tick = 0
 
@@ -40,7 +40,8 @@ class PoseEstimator(object):
         delta_y = v_steering * np.cos(steering_angle) * np.sin(self.last_pose[2]) * delta_t
         self.last_time = time
         self.last_tick = encoder_ticks
-        self.last_pose = tuple(map(sum, zip(self.last_pose, (delta_x, delta_y, delta_heading))))
+        self.last_pose = np.add(self.last_pose, [delta_x, delta_y, delta_heading])
+        self.last_pose[2] = self.last_pose[2]%(2*np.pi)
         return self.last_pose
 
     '''estimate (time, steering_angle, encoder_ticks, angular_velocity) returns
