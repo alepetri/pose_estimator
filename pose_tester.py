@@ -1,13 +1,24 @@
-'''
-Written by Andy Lepetri
+"""Module contains a quick and dirty simulator for position estimation.
+
+Imports:
+pygame
+numpy
+PoseEstimator from pose_estimator.py
+
+Classes:
+Rectangle -- stores information for custom pygame rectangle
+Tricycle -- relates rectangles to form tricylce robot
 
 Controls:
+Up Arrow     -- move forward
+Down Arrow   -- move backward
+Left Arrow   -- move rotate steering wheel -yaw
+Right Arrow  -- move rotate steering wheel +yaw
 
-Up Arrow     is move forward
-Down Arrow   is move backward
-Left Arrow   is move rotate steering wheel -yaw
-Right Arrow  is move rotate steering wheel +yaw
-'''
+******************************************************************************
+               WARNING! NOT PEP8 COMPLAINT! NOT FINE TUNED!
+******************************************************************************
+"""
 
 import pygame
 import numpy as np
